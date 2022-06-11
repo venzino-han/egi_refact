@@ -214,7 +214,7 @@ def train_src(args, file_path, label_path):
     acc = evaluate(classifier, embeds, src_labels, test_mask)
     print("Test Accuracy {:.4f}".format(acc))
 
-    return 
+    return acc
 
 def train_dst(args, file_path, label_path):
     """Prepare source"""
@@ -276,7 +276,7 @@ def train_dst(args, file_path, label_path):
 
     acc = evaluate(classifier, embeds, dst_labels, test_mask)
     print("Test Accuracy {:.4f}".format(acc))
-    return
+    return acc
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='DGI')
@@ -289,9 +289,9 @@ if __name__=='__main__':
                         help="dgi learning rate")
     parser.add_argument("--classifier-lr", type=float, default=1e-2,
                         help="classifier learning rate")
-    parser.add_argument("--n-dgi-epochs", type=int, default=100,
+    parser.add_argument("--n-dgi-epochs", type=int, default=300,
                         help="number of training epochs")
-    parser.add_argument("--n-classifier-epochs", type=int, default=200,
+    parser.add_argument("--n-classifier-epochs", type=int, default=100,
                         help="number of training epochs")
     parser.add_argument("--n-hidden", type=int, default=32,
                         help="number of hidden gcn units")
@@ -320,7 +320,21 @@ if __name__=='__main__':
     args = parser.parse_args()
     print(args)
 
-    # train_src(args, 'data/europe-airports.edgelist', 'data/labels-europe-airports.txt')
-    train_dst(args, 'data/europe-airports.edgelist', 'data/labels-europe-airports.txt')
-    train_dst(args, 'data/usa-airports.edgelist', 'data/labels-usa-airports.txt')
-    train_dst(args, 'data/brazil-airports.edgelist', 'data/labels-brazil-airports.txt')
+    src_accs = []
+    dst_accs_0 = []
+    dst_accs_1 = []
+    dst_accs_2 = []
+    for i in range(10):
+        src_acc = train_src(args, 'data/europe-airports.edgelist', 'data/labels-europe-airports.txt')
+        dst_acc_0 = train_dst(args, 'data/europe-airports.edgelist', 'data/labels-europe-airports.txt')
+        dst_acc_1 = train_dst(args, 'data/usa-airports.edgelist', 'data/labels-usa-airports.txt')
+        dst_acc_2 = train_dst(args, 'data/brazil-airports.edgelist', 'data/labels-brazil-airports.txt')
+        src_accs.append(src_acc)
+        dst_accs_0.append(dst_acc_0)
+        dst_accs_1.append(dst_acc_1)
+        dst_accs_2.append(dst_acc_2)
+
+    print('src', 'Test Accuracy {:.4f}, std {:.4f}'.format(np.mean(src_accs), np.std(src_accs)))
+    print('dst 0', 'Test Accuracy {:.4f}, std {:.4f}'.format(np.mean(dst_accs_0), np.std(dst_accs_0)) )
+    print('dst 1', 'Test Accuracy {:.4f}, std {:.4f}'.format(np.mean(dst_accs_1), np.std(dst_accs_1)) )
+    print('dst 2', 'Test Accuracy {:.4f}, std {:.4f}'.format(np.mean(dst_accs_2), np.std(dst_accs_2)) )
